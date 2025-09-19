@@ -1,20 +1,20 @@
 import { useState } from 'react'
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <h1 class="text-3xl font-bold underline">
-    Hello world!
-  </h1>
-  </div>
-    </>
-  )
+    <Router>
+      <Routes>
+        {/* 👇 Default route shows Landing */}
+        <Route path="/" element={<Landing />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
