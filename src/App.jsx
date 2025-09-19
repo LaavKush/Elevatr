@@ -1,20 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import "./App.css";
+
+// pages
+
+import Auth from "./pages/Auth/AuthTabs";
+import Landing from "./pages/Landing";
+
+// context
+import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { user } = useAuth();
 
   return (
-    <>
-      <div>
-        <h1 class="text-5xl font-bold underline">
-    Hello world!
-  </h1>
-  </div>
-    </>
-  )
+    <Routes>
+      {/* Landing Page */}
+      <Route path="/" element={<Landing />} />
+
+      {/* Auth Pages */}
+      <Route path="/auth" element={<Auth />} />
+    
+
+      {/* Protected Routes (to be added later) */}
+      {/* <Route element={user ? <DashboardLayout /> : <Navigate to="/login" replace />}>
+        ...
+      </Route> */}
+    </Routes>
+  );
 }
 
-export default App
+export default App;
