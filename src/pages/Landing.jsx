@@ -2,10 +2,11 @@ import { Sparkles, Calendar, BookOpen, Bot, Menu, X, User } from "lucide-react";
 import Lottie from "lottie-react";
 import { useState } from "react";
 import aiAvatar from "../assets/mentor/ai-avatar.json";
+import { Link } from "react-router-dom"; // Import Link for navigation
 
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Track login state
   const [profileMenuOpen, setProfileMenuOpen] = useState(false); // Track profile dropdown state
 
   // Toggle login state and add logs for debugging
@@ -45,7 +46,6 @@ export default function Landing() {
                 >
                   Sign In / Sign Up
                 </a>
-                
               </>
             ) : (
               <div className="relative">
@@ -60,7 +60,7 @@ export default function Landing() {
                 {/* Profile dropdown */}
                 {profileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-[#01497C] rounded-lg shadow-lg text-[#A9D6E5]">
-                    <a href="/profile" className="block px-4 py-2 hover:bg-[#2C7DA0]">My Profile</a>
+                    <Link to="/profile" className="block px-4 py-2 hover:bg-[#2C7DA0]">My Profile</Link>
                     <a
                       href="#"
                       className="block px-4 py-2 hover:bg-[#2C7DA0]"

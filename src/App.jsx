@@ -2,6 +2,9 @@ import { useState } from 'react'
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
+import Profile from "./pages/Profile";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -12,6 +15,10 @@ function App() {
       <Routes>
         {/* 👇 Default route shows Landing */}
         <Route path="/" element={<Landing />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />}>
+        </Route>
       </Routes>
     </Router>
   );
