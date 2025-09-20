@@ -14,7 +14,7 @@ import Settings from "./pages/Settings";
 // context
 import { useAuth } from "./context/AuthContext";
 import AImentor from "./pages/AIMentor";
-
+import Checklist from "./pages/Checklist";
 
 function App() {
   const { user } = useAuth();
@@ -35,6 +35,11 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />}/>
      <Route path="/settings" element={<Settings />}/>
  <Route path="/ai-mentor" element={<AImentor />}/>
+ <Route path="/checklist" element={<Checklist/>}/>
+
+
+
+
       {/* Protected Routes (to be added later) */}
       {/* <Route element={user ? <DashboardLayout /> : <Navigate to="/login" replace />}>
         ...
