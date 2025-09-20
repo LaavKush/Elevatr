@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { auth } from "../firebase";
 import Sidebar from "./Sidebar";
 
-const API_URL = "https://a0862bb7f80b.ngrok-free.app/";
+const API_URL = "https://deda0146dd10.ngrok-free.app/";
 
 export default class Profile extends Component {
   constructor(props) {

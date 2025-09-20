@@ -26,7 +26,7 @@ const Dashboard = () => {
         if (!user) throw new Error("User not logged in");
 
         const token = await user.getIdToken();
-        const res = await fetch("https://a0862bb7f80b.ngrok-free.app/profile", {
+        const res = await fetch("https://deda0146dd10.ngrok-free.app/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

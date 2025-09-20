@@ -79,7 +79,7 @@ const Sidebar = () => {
           {/* Navigation */}
           <nav className="space-y-3">
             <SidebarItem icon={<Home size={20} />} text="Home" onClick={() => navigate("/dashboard")} />
-            <SidebarItem icon={<BookOpen size={20} />} text="Resources" onClick={() => navigate("/resources")} />
+            <SidebarItem icon={<BookOpen size={20} />} text="Tech Career Guides" onClick={() => navigate("/resources")} />
             <SidebarItem icon={<Calendar size={20} />} text="Calendar" onClick={() => navigate("/calendar")} />
             <SidebarItem icon={<BookOpen size={20} />} text="Checklist" onClick={() => navigate("/checklist")} />
             <SidebarItem icon={<MessageSquare size={20} />} text="AI Mentor" onClick={() => navigate("/ai-mentor")} />

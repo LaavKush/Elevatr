@@ -132,7 +132,7 @@ const Register = () => {
         interests: formData.interests.map(item => item.value),
       };
 
-      const rootURL = "https://a0862bb7f80b.ngrok-free.app"; 
+      const rootURL = "https://deda0146dd10.ngrok-free.app"; 
       const response = await fetch(`${rootURL}/profile`, {
         method: "POST",
         headers: {
