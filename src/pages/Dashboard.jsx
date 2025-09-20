@@ -5,6 +5,7 @@ import Modal from "react-modal";
 import { MessageSquare, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Avatar from "react-avatar";
+import { auth } from "../firebase.js";
 
 Modal.setAppElement("#root");
 
@@ -21,12 +22,18 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("eyJhbGciOiJSUzI1NiIsImtpZCI6IjUwMDZlMjc5MTVhMTcwYWIyNmIxZWUzYjgxZDExNjU0MmYxMjRmMjAiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiTGFhdmFueWEgS3VzaHdhaGEiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSTNSVlc5SWNSTWNISnpOZ1dmNF9mTURSb2hWNEltbXRob3hGb3lXQ2hUb1NEb3NXZHo9czk2LWMiLCJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vZWxldmF0ci1hZDM0MCIsImF1ZCI6ImVsZXZhdHItYWQzNDAiLCJhdXRoX3RpbWUiOjE3NTgzNjY5MzUsInVzZXJfaWQiOiJKbUlZYkNSUzg2UjFyQVV3aDdUSVFSYVp0a2kxIiwic3ViIjoiSm1JWWJDUlM4NlIxckFVd2g3VElRUmFadGtpMSIsImlhdCI6MTc1ODM2NjkzNSwiZXhwIjoxNzU4MzcwNTM1LCJlbWFpbCI6ImxhYXZhbnlhMDM2YnRpdDIzQGlnZHR1dy5hYy5pbiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTAxMTQ5NTgzOTMxNzg4NjE5Nzg4Il0sImVtYWlsIjpbImxhYXZhbnlhMDM2YnRpdDIzQGlnZHR1dy5hYy5pbiJdfSwic2lnbl9pbl9wcm92aWRlciI6Imdvb2dsZS5jb20ifX0.rhaERFYq0ATffeaG5l_NNCj6zY3ABU3dcaC-K7g5u8xitDa7cZ7I9npe0ycVfiTchIQIteX5j-AF3edrM2kvc3OvGwSk0C05ZILX-kDPY_lZ-tiSez-3Cbfbit2WOCvqrb762dRoPyrHwjM5nOTBbQ5ye4nL1djwQMqvMlRYU__WY3tgfjT-3-8B8z6wKoCUP3LaBIdw7wrmXcNK1yCEmmQVFue5JHlUAKvvE_f40nQQ4YbvouHjOy6DTh9MIV5kzf9u9sQ0YXV_Q0gGxfQgRuCpSu6ZpLn7ctKuXHSARmkCKf2OIr9ieIcSydmKUHx3D4JPF4J67jpoXLI9LyAe1Q"); // Replace with your token storage
-        const res = await fetch("https://418fad5fc00f.ngrok-free.app/profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
+        // ✅ Get current logged-in user
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not logged in");
+
+    // ✅ Get fresh ID token
+    const token = await user.getIdToken();
+
+    const res = await fetch("https://a0862bb7f80b.ngrok-free.app/profile", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
           },
         });
         if (!res.ok) throw new Error("Failed to fetch profile");

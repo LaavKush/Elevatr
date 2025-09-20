@@ -62,15 +62,16 @@ const Register = () => {
 
   // Get logged-in user email & photo
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserEmail(user.email);
-        setUserPhoto(getUserPhotoOrInitials(user)); 
-        setFormData(prev => ({ ...prev, name: user.displayName || "" }));
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setUserEmail(user.email);
+      setUserPhoto(user.photoURL);   // <-- direct Google photoURL use karo
+      setFormData(prev => ({ ...prev, name: user.displayName || "" }));
+    }
+  });
+  return () => unsubscribe();
+}, []);
+
 
   // Run validation and progress update whenever formData changes
   useEffect(() => {
@@ -131,7 +132,7 @@ const Register = () => {
         interests: formData.interests.map(item => item.value),
       };
 
-      const rootURL = "https://418fad5fc00f.ngrok-free.app"; 
+      const rootURL = "https://a0862bb7f80b.ngrok-free.app"; 
       const response = await fetch(`${rootURL}/profile`, {
         method: "POST",
         headers: {
