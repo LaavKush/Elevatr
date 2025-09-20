@@ -1,51 +1,53 @@
-// src/components/Sidebar.jsx
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { FaUserCircle, FaChartPie, FaCog, FaSignOutAlt } from "react-icons/fa";
-import { auth } from "../firebase";
+import { Home, BookOpen, Calendar, Settings as SettingsIcon, MessageSquare } from "lucide-react";
+import Avatar from "react-avatar";
+import { useNavigate } from "react-router-dom";
 
-const Sidebar = () => {
-  const location = useLocation();
-
-  const menuItems = [
-    { name: "Profile", path: "/dashboard/profile", icon: <FaUserCircle /> },
-    { name: "Stats", path: "/dashboard/stats", icon: <FaChartPie /> },
-    { name: "Settings", path: "/dashboard/settings", icon: <FaCog /> },
-  ];
-
-  const handleLogout = async () => {
-    try {
-      await auth.signOut();
-      window.location.href = "/"; // redirect to home/login
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+const Sidebar = ({ sidebarOpen }) => {
+  const navigate = useNavigate();
 
   return (
-    <div className="w-72 bg-gradient-to-b from-[#01497C] to-[#468FAF] min-h-screen text-white flex flex-col p-6">
-      <h2 className="text-3xl font-bold mb-10 text-center">Elevatr</h2>
-      <nav className="flex flex-col space-y-4">
-        {menuItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white hover:text-[#01497C] transition ${
-              location.pathname === item.path ? "bg-white text-[#01497C]" : ""
-            }`}
-          >
-            {item.icon} {item.name}
-          </Link>
-        ))}
-      </nav>
-      <button
-        onClick={handleLogout}
-        className="mt-auto flex items-center gap-3 px-4 py-3 rounded-lg bg-red-500 hover:bg-red-600 transition"
-      >
-        <FaSignOutAlt /> Logout
-      </button>
-    </div>
+    <aside
+      className={`fixed md:static z-20 w-72 bg-[#012A4A] text-white p-6 flex flex-col justify-between rounded-r-2xl shadow-2xl transition-transform duration-300 ${
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      } md:translate-x-0`}
+    >
+      <div>
+        {/* Avatar + Name */}
+        <div className="flex items-center space-x-4 mb-12">
+          <Avatar name="Anchal Gupta" size="56" round className="shadow-md border-2 border-[#61A5C2]" />
+          <div>
+            <h2 className="font-semibold text-lg">Anchal Gupta</h2>
+            <p className="text-sm text-[#A9D6E5]">CSE Student</p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="space-y-3">
+          <SidebarItem icon={<Home size={20} />} text="Home" active onClick={() => navigate("/")} />
+          <SidebarItem icon={<BookOpen size={20} />} text="Resources" onClick={() => navigate("/resources")} />
+          <SidebarItem icon={<Calendar size={20} />} text="Calendar" onClick={() => navigate("/calendar")} />
+          <SidebarItem icon={<BookOpen size={20} />} text="Checklist" onClick={() => navigate("/checklist")} />
+          <SidebarItem icon={<MessageSquare size={20} />} text="AI Mentor" onClick={() => navigate("/ai-mentor")} />
+          <SidebarItem icon={<SettingsIcon size={20} />} text="Settings" onClick={() => navigate("/settings")} />
+        </nav>
+      </div>
+    </aside>
   );
 };
+
+const SidebarItem = ({ icon, text, active, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer transition ${
+      active
+        ? "bg-[#01497C] text-white shadow-md"
+        : "text-[#A9D6E5] hover:bg-[#013A63] hover:text-white"
+    }`}
+  >
+    {icon}
+    <span className="font-medium">{text}</span>
+  </div>
+);
 
 export default Sidebar;
