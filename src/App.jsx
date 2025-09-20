@@ -5,6 +5,11 @@ import "./App.css";
 
 import Auth from "./pages/Auth/AuthTabs";
 import Landing from "./pages/Landing";
+import Calendar from "./pages/Calendar"; 
+import Resources from "./pages/Resources";
+import Profile from "./pages/Profile";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
 
 // context
 import { useAuth } from "./context/AuthContext";
@@ -19,6 +24,13 @@ function App() {
 
       {/* Auth Pages */}
       <Route path="/auth" element={<Auth />} />
+
+        <Route path="/calendar" element={<Calendar />} /> 
+
+        <Route path="/resources" element={<Resources/>}/>
+         <Route path="/profile" element={<Profile />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />}/>
     
 
       {/* Protected Routes (to be added later) */}

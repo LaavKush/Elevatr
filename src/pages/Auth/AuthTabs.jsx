@@ -33,14 +33,14 @@ export default function Auth() {
           lastLogin: serverTimestamp(),
           isProfileComplete: false, // flag to check profile completion
         });
-        navigate("/profile");
+        navigate("/register");
       } else {
         // Existing user
         await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
         const userData = userSnap.data();
         if (!userData.isProfileComplete) {
           // If profile not complete, go to profile page
-          navigate("/profile");
+          navigate("/register");
         } else {
           navigate("/dashboard");
         }
