@@ -22,25 +22,22 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // ✅ Get current logged-in user
-    const user = auth.currentUser;
-    if (!user) throw new Error("User not logged in");
+        const user = auth.currentUser;
+        if (!user) throw new Error("User not logged in");
 
-    // ✅ Get fresh ID token
-    const token = await user.getIdToken();
-
-    const res = await fetch("https://a0862bb7f80b.ngrok-free.app/profile", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
+        const token = await user.getIdToken();
+        const res = await fetch("https://a0862bb7f80b.ngrok-free.app/profile", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
           },
         });
+
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
         setUser(data);
 
-        // Optional: derive career objectives or stats dynamically
         setCareerObjectives(data.interests || []);
         setStats([
           { title: "Completed Tasks", value: 12 },
@@ -58,37 +55,24 @@ const Dashboard = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-xl text-gray-500">
-        Loading profile...
-      </div>
+      <div className="flex items-center justify-center min-h-screen">
+  <div className="w-16 h-16 border-4 border-t-[#01497C] border-gray-300 rounded-full animate-spin"></div>
+</div>
+
     );
   }
 
   const cgpaStatus = user.cgpa >= 7 ? "good" : "improve";
-  const overallProgress = 65; // You can calculate dynamically if needed
+  const overallProgress = 65;
 
-  const improvementTips = [
-    {
-      subject: "Data Structures",
-      reason: "Low assignment scores",
-      tips: ["Revise key topics weekly", "Solve 2-3 practice problems daily", "Follow checklist tasks"],
-    },
-    {
-      subject: "Machine Learning",
-      reason: "Low quiz scores",
-      tips: ["Watch ML tutorials", "Redo course exercises", "Join study groups"],
-    },
-    {
-      subject: "Web Development",
-      reason: "Missed deadlines",
-      tips: ["Complete portfolio project", "Follow checklist tasks", "Use online resources for practice"],
-    },
-  ];
+  
 
   return (
     <div className="flex min-h-screen font-sans bg-gray-100 relative">
-      <Sidebar sidebarOpen={sidebarOpen} />
+      {/* Sidebar */}
+      <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
+      {/* Hamburger / Cross Button */}
       <button
         className="absolute top-6 left-6 md:hidden z-30 bg-white p-2 rounded-full shadow-md"
         onClick={toggleSidebar}
@@ -103,7 +87,6 @@ const Dashboard = () => {
             <Avatar name={user.name} size="100" round className="relative z-10 shadow-lg" />
             <div className="absolute top-0 left-0 w-24 h-24 rounded-full bg-gradient-to-tr from-[#2C7DA0] to-[#61A5C2] opacity-30 animate-pulse z-0"></div>
           </div>
-
           <div className="flex-1">
             <h1 className="text-3xl md:text-4xl font-extrabold text-[#012A4A]">
               Welcome Back, {user.name} 👋
@@ -112,7 +95,9 @@ const Dashboard = () => {
             <div className="flex mt-4 space-x-4">
               <div
                 className={`px-4 py-1 rounded-xl shadow-md font-semibold text-white ${
-                  cgpaStatus === "good" ? "bg-gradient-to-r from-green-400 to-blue-400" : "bg-gradient-to-r from-red-400 to-orange-400"
+                  cgpaStatus === "good"
+                    ? "bg-gradient-to-r from-green-400 to-blue-400"
+                    : "bg-gradient-to-r from-red-400 to-orange-400"
                 }`}
               >
                 CGPA: {user.cgpa} / 10
@@ -121,12 +106,12 @@ const Dashboard = () => {
                 Progress: {overallProgress}%
               </div>
               {cgpaStatus === "improve" && (
-                <button
-                  onClick={() => setModalOpen(true)}
-                  className="bg-red-500 text-white px-4 py-1 rounded-xl shadow-md font-semibold hover:bg-red-600 transition"
-                >
-                  Click here For Improvement Tips
-                </button>
+               <button
+  onClick={() => navigate("/ai-mentor")}
+  className="bg-red-500 text-white px-4 py-1 rounded-xl shadow-md font-semibold hover:bg-red-600 transition"
+>
+  Click here For Improvement Tips
+</button>
               )}
             </div>
           </div>
@@ -147,7 +132,9 @@ const Dashboard = () => {
           <h2 className="text-2xl font-semibold mb-4 text-[#01497C]">Career Objectives</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {careerObjectives.map((obj, idx) => (
-              <div key={idx} className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition border-l-4 border-[#2C7DA0]">{obj}</div>
+              <div key={idx} className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition border-l-4 border-[#2C7DA0]">
+                {obj}
+              </div>
             ))}
           </div>
         </section>
@@ -172,34 +159,7 @@ const Dashboard = () => {
         </button>
       </main>
 
-      {/* Improvement Modal */}
-      <Modal
-        isOpen={modalOpen}
-        onRequestClose={() => setModalOpen(false)}
-        className="max-w-2xl w-full mx-4 bg-white rounded-3xl p-8 shadow-2xl outline-none max-h-[90vh] overflow-y-auto"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-      >
-        <h2 className="text-3xl font-bold mb-6 text-red-500">Tips to Improve CGPA</h2>
-        <div className="space-y-6">
-          {improvementTips.map((item, index) => (
-            <div key={index}>
-              <h3 className="font-semibold text-[#01497C] text-xl">{item.subject}</h3>
-              <p className="text-gray-600 mb-2">Reason: {item.reason}</p>
-              <ul className="list-disc pl-5 text-gray-700">
-                {item.tips.map((tip, i) => <li key={i}>{tip}</li>)}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => setModalOpen(false)}
-            className="bg-[#2C7DA0] text-white px-8 py-3 rounded-2xl shadow-lg hover:scale-105 transition"
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
+      
     </div>
   );
 };

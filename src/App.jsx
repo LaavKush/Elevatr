@@ -10,9 +10,10 @@ import Resources from "./pages/Resources";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-
+import Settings from "./pages/Settings";
 // context
 import { useAuth } from "./context/AuthContext";
+import AImentor from "./pages/AIMentor";
 
 
 function App() {
@@ -32,8 +33,8 @@ function App() {
          <Route path="/profile" element={<Profile />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />}/>
-    
-
+     <Route path="/settings" element={<Settings />}/>
+ <Route path="/ai-mentor" element={<AImentor />}/>
       {/* Protected Routes (to be added later) */}
       {/* <Route element={user ? <DashboardLayout /> : <Navigate to="/login" replace />}>
         ...

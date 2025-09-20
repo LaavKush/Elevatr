@@ -1,179 +1,157 @@
+// src/pages/Settings.jsx
 import React, { useState } from "react";
-import Select from "react-select";
+import { useNavigate } from "react-router-dom";
+import { Sun, Moon, Trash2, User, Settings as SettingsIcon, X } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { Sun, Moon, Bell, RefreshCw, Trash2 } from "lucide-react";
+import { auth } from "../firebase";
+import Sidebar from "./Sidebar";
+
+const API_URL = "https://a0862bb7f80b.ngrok-free.app/profile";
 
 const Settings = () => {
-  // Theme toggle
+  const navigate = useNavigate();
   const [theme, setTheme] = useState("light");
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // modal state
+
   const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
 
-  // Notifications toggle
-  const [notifications, setNotifications] = useState(true);
+  const handleDeleteAccount = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("User not logged in");
+        return;
+      }
 
-  // Profile form
-  const [profile, setProfile] = useState({
-    name: "",
-    branch: "",
-    year: "",
-    cgpa: "",
-    skills: [],
-    interests: [],
-    careerGoals: [],
-  });
+      const token = await user.getIdToken();
 
-  const skillsOptions = [
-    { value: "React", label: "React" },
-    { value: "Python", label: "Python" },
-    { value: "Machine Learning", label: "Machine Learning" },
-    { value: "Web Development", label: "Web Development" },
-    { value: "Node.js", label: "Node.js" },
-    { value: "Django", label: "Django" },
-    { value: "AWS", label: "AWS" },
-  ];
+      const res = await fetch(API_URL, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-  const interestsOptions = [
-    { value: "AI", label: "AI" },
-    { value: "Blockchain", label: "Blockchain" },
-    { value: "Frontend", label: "Frontend" },
-    { value: "Cybersecurity", label: "Cybersecurity" },
-  ];
-
-  const careerOptions = [
-    { value: "AI Engineer", label: "AI Engineer" },
-    { value: "Data Scientist", label: "Data Scientist" },
-    { value: "Frontend Developer", label: "Frontend Developer" },
-    { value: "Backend Developer", label: "Backend Developer" },
-  ];
-
-  const handleProfileChange = (field, value) => {
-    setProfile({ ...profile, [field]: value });
+      const result = await res.json();
+      if (result.status === "success") {
+        toast.success("Account deleted successfully");
+        await auth.signOut();
+        navigate("/");
+      } else {
+        toast.error(result.message || "Failed to delete account");
+      }
+    } catch (err) {
+      console.error("Error deleting account:", err);
+      toast.error(err.message || "Failed to delete account");
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(profile, theme, notifications);
-    toast.success("Settings updated!");
-  };
+  const pageBg = theme === "light" ? "bg-[#E5F1F7] text-gray-900" : "bg-gray-900 text-white";
+  const cardBg = theme === "light" ? "bg-white" : "bg-gray-800";
+  const textColor = theme === "light" ? "text-gray-900" : "text-gray-100";
+  const subTextColor = theme === "light" ? "text-gray-600" : "text-gray-300";
 
   return (
-    <div className={`min-h-screen py-12 px-6 ${theme === "light" ? "bg-gradient-to-r from-[#01497C] to-[#468FAF]" : "bg-gray-900 text-white"}`}>
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-10">
-        <h1 className="text-3xl font-bold mb-8 text-[#01497C] dark:text-white">Settings</h1>
+    <div className={`flex min-h-screen ${pageBg} transition-colors duration-300`}>
+      <Sidebar theme={theme} />
 
-        {/* Theme & Notifications */}
-        <div className="flex flex-col md:flex-row gap-6 mb-10">
-          <div className="flex-1 bg-gradient-to-r from-[#2C7DA0] to-[#61A5C2] rounded-xl p-6 shadow-md flex items-center justify-between cursor-pointer hover:scale-105 transition"
-            onClick={toggleTheme}>
-            <div className="flex items-center gap-3">
-              {theme === "light" ? <Sun size={24} /> : <Moon size={24} />}
-              <span className="font-semibold text-white">Theme: {theme === "light" ? "Light" : "Dark"}</span>
-            </div>
-          </div>
+      <main className="flex-1 p-8 md:p-12 pt-24 md:pt-20">
+        <div className="max-w-4xl mx-auto space-y-8">
 
-          <div className="flex-1 bg-gradient-to-r from-[#2C7DA0] to-[#61A5C2] rounded-xl p-6 shadow-md flex items-center justify-between cursor-pointer hover:scale-105 transition"
-            onClick={() => setNotifications(!notifications)}>
-            <div className="flex items-center gap-3">
-              <Bell size={24} />
-              <span className="font-semibold text-white">Notifications: {notifications ? "On" : "Off"}</span>
-            </div>
+          {/* Page Header */}
+          <div className="flex items-center gap-3">
+            <SettingsIcon size={32} className={textColor} />
+            <h1 className={`text-3xl md:text-5xl font-bold ${textColor}`}>
+              Settings
+            </h1>
           </div>
+          <p className={`${subTextColor} mb-8`}>
+            Manage your account, appearance, and preferences.
+          </p>
+
+          {/* Appearance Section */}
+          <section className={`${cardBg} p-8 rounded-3xl shadow-md transition-colors duration-300`}>
+            <h2 className={`text-2xl font-semibold mb-6 ${textColor}`}>Appearance</h2>
+            <div
+              onClick={toggleTheme}
+              className="flex items-center justify-between p-5 rounded-2xl shadow hover:scale-105 transition-transform duration-300 cursor-pointer bg-gradient-to-r from-[#2C7DA0] to-[#61A5C2]"
+            >
+              <div className="flex items-center gap-4">
+                {theme === "light" ? <Sun size={28} /> : <Moon size={28} />}
+                <span className="font-semibold text-white text-lg">
+                  {theme === "light" ? "Light Mode" : "Dark Mode"}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* Account Section */}
+          <section className={`${cardBg} p-8 rounded-3xl shadow-md transition-colors duration-300`}>
+            <h2 className={`text-2xl font-semibold mb-6 ${textColor}`}>Account</h2>
+            <div className="flex flex-col md:flex-row gap-6">
+              <button
+                onClick={() => navigate("/profile")}
+                className="flex-1 py-4 bg-[#01497C] hover:bg-[#013A63] text-white font-semibold rounded-2xl shadow transition-all duration-300 flex items-center justify-center gap-2 text-lg"
+              >
+                <User size={22} />
+                My Profile
+              </button>
+
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-2xl shadow transition-all duration-300 flex items-center justify-center gap-3 text-lg"
+              >
+                <Trash2 size={22} />
+                Delete Account
+              </button>
+            </div>
+          </section>
+
         </div>
 
-        {/* Profile Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <h2 className="text-xl font-semibold text-[#01497C] dark:text-white">Update Profile</h2>
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Blurred background */}
+            <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)}></div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Name"
-              value={profile.name}
-              onChange={(e) => handleProfileChange("name", e.target.value)}
-              className="p-3 rounded-lg border border-[#A9D6E5] focus:ring-2 focus:ring-[#01497C] w-full"
-            />
-            <input
-              type="text"
-              placeholder="Branch"
-              value={profile.branch}
-              onChange={(e) => handleProfileChange("branch", e.target.value)}
-              className="p-3 rounded-lg border border-[#A9D6E5] focus:ring-2 focus:ring-[#01497C] w-full"
-            />
-            <input
-              type="text"
-              placeholder="Year"
-              value={profile.year}
-              onChange={(e) => handleProfileChange("year", e.target.value)}
-              className="p-3 rounded-lg border border-[#A9D6E5] focus:ring-2 focus:ring-[#01497C] w-full"
-            />
-            <input
-              type="text"
-              placeholder="CGPA"
-              value={profile.cgpa}
-              onChange={(e) => handleProfileChange("cgpa", e.target.value)}
-              className="p-3 rounded-lg border border-[#A9D6E5] focus:ring-2 focus:ring-[#01497C] w-full"
-            />
+            {/* Modal content */}
+            <div className="relative bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl max-w-md w-full z-10">
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                <X size={24} />
+              </button>
+              <h3 className="text-xl font-semibold mb-4 dark:text-gray-100">Confirm Account Deletion</h3>
+              <p className="mb-6 text-gray-600 dark:text-gray-300">
+                Are you sure you want to delete your account? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-4">
+                <button
+                  className="px-5 py-2 rounded-2xl bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 font-semibold transition"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-5 py-2 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-semibold transition"
+                  onClick={() => {
+                    handleDeleteAccount();
+                    setShowDeleteModal(false);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div>
-            <label className="block mb-2 font-semibold text-[#01497C] dark:text-white">Skills</label>
-            <Select
-              isMulti
-              options={skillsOptions}
-              value={profile.skills}
-              onChange={(selected) => handleProfileChange("skills", selected)}
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 font-semibold text-[#01497C] dark:text-white">Interests</label>
-            <Select
-              isMulti
-              options={interestsOptions}
-              value={profile.interests}
-              onChange={(selected) => handleProfileChange("interests", selected)}
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 font-semibold text-[#01497C] dark:text-white">Career Goals</label>
-            <Select
-              isMulti
-              options={careerOptions}
-              value={profile.careerGoals}
-              onChange={(selected) => handleProfileChange("careerGoals", selected)}
-            />
-          </div>
-
-          {/* Account Actions */}
-          <div className="flex flex-col md:flex-row gap-4 mt-6">
-            <button
-              type="button"
-              className="flex-1 bg-yellow-500 text-white py-3 rounded-lg flex items-center justify-center gap-2 hover:scale-105 transition"
-              onClick={() => toast.info("Reset Password clicked")}
-            >
-              <RefreshCw size={20} /> Reset Password
-            </button>
-            <button
-              type="button"
-              className="flex-1 bg-red-600 text-white py-3 rounded-lg flex items-center justify-center gap-2 hover:scale-105 transition"
-              onClick={() => toast.error("Delete Account clicked")}
-            >
-              <Trash2 size={20} /> Delete Account
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full mt-4 py-3 bg-gradient-to-r from-[#2C7DA0] to-[#61A5C2] text-white font-semibold rounded-lg shadow-md hover:scale-105 transition"
-          >
-            Save Changes
-          </button>
-        </form>
+        )}
 
         <ToastContainer position="top-right" autoClose={2000} />
-      </div>
+      </main>
     </div>
   );
 };
