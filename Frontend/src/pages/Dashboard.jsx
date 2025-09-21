@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import { ChecklistCard } from "./Card2";
@@ -9,6 +10,8 @@ import { auth } from "../firebase.js";
 
 Modal.setAppElement("#root");
 
+const API_URL = "https://67eb25c046d0.ngrok-free.app";
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,7 +22,7 @@ const Dashboard = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  // Fetch user profile
+  // --- Fetch user profile from backend using Firebase token ---
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -27,7 +30,7 @@ const Dashboard = () => {
         if (!currentUser) throw new Error("User not logged in");
 
         const token = await currentUser.getIdToken();
-        const res = await fetch("https://deda0146dd10.ngrok-free.app/profile", {
+        const res = await fetch(`${API_URL}/profile`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -38,23 +41,49 @@ const Dashboard = () => {
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
         setUser(data);
-
         setCareerObjectives(data.interests || []);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching profile:", err);
       }
     };
 
     fetchUserProfile();
   }, []);
 
-  // Load tasks from localStorage
+  // --- Fetch tasks from backend ---
+  const fetchTasks = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      const token = await currentUser.getIdToken();
+      const res = await fetch(`${API_URL}/tasks`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch tasks");
+
+      const data = await res.json();
+      const tasksWithId = data.map((t, idx) => ({
+        id: t.id || t.task_id || idx,
+        ...t,
+      }));
+      setTasks(tasksWithId);
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+    }
+  };
+
   useEffect(() => {
-    const savedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-    setTasks(savedTasks);
+    fetchTasks();
   }, []);
 
-  // Update stats dynamically whenever tasks change
+  // --- Update stats dynamically whenever tasks change ---
   useEffect(() => {
     const completedCount = tasks.filter((t) => t.completed).length;
     const ongoingCourses = tasks.filter((t) => t.category === "Ongoing Courses").length;
@@ -79,11 +108,9 @@ const Dashboard = () => {
 
   const cgpaStatus = user.cgpa >= 7 ? "good" : "improve";
 
-  // Calculate overall checklist progress
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.completed).length;
-  const checklistProgress =
-    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const checklistProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
     <div className="flex min-h-screen font-sans bg-gray-100 relative">
@@ -185,7 +212,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {tasks.map((task) => (
                 <ChecklistCard
-                  key={task.id}
+                  key={task.id || Math.random()}
                   task={task.title}
                   progress={task.completed ? 100 : 0}
                   category={task.category}

@@ -1,34 +1,18 @@
-// src/pages/ChecklistPage.jsx
+// src/pages/Checklist.jsx
 import React, { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { format } from "date-fns";
+import { auth } from "../firebase";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const API_URL = "https://67eb25c046d0.ngrok-free.app";
 
 export default function ChecklistPage() {
   const categories = ["Ongoing Courses", "Portfolio Projects", "Certifications"];
 
-  const defaultTasks = [
-    { id: 1, title: "Complete DSA Basics Course", category: "Ongoing Courses", deadline: "2025-10-05", completed: true, priority: "Medium" },
-    { id: 2, title: "Finish React JS Intermediate Course", category: "Ongoing Courses", deadline: "2025-10-10", completed: false, priority: "High" },
-    { id: 3, title: "Complete Python for Data Science", category: "Ongoing Courses", deadline: "2025-10-12", completed: false, priority: "High" },
-    { id: 4, title: "Machine Learning Basics Course", category: "Ongoing Courses", deadline: "2025-10-15", completed: false, priority: "High" },
-    { id: 5, title: "Web Development Bootcamp", category: "Ongoing Courses", deadline: "2025-10-20", completed: false, priority: "Medium" },
-    { id: 6, title: "Build Personal Portfolio Website", category: "Portfolio Projects", deadline: "2025-10-12", completed: false, priority: "High" },
-    { id: 7, title: "React To-Do App Project", category: "Portfolio Projects", deadline: "2025-10-15", completed: false, priority: "Medium" },
-    { id: 8, title: "Complete Data Science Certificate", category: "Certifications", deadline: "2025-11-01", completed: false, priority: "High" },
-    { id: 9, title: "Frontend Development Certificate", category: "Certifications", deadline: "2025-11-05", completed: false, priority: "Medium" },
-  ];
-
-  // ✅ load from localStorage but fallback if corrupted
-  const [tasks, setTasks] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("tasks"));
-      return Array.isArray(saved) && saved.length ? saved : defaultTasks;
-    } catch {
-      return defaultTasks;
-    }
-  });
-
+  const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("All");
   const [newTask, setNewTask] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
@@ -41,35 +25,160 @@ export default function ChecklistPage() {
     "Prepare for at least 1 hackathon",
   ]);
 
+  // --- Helper: Get Firebase token ---
+  const getToken = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      toast.error("User not logged in");
+      return null;
+    }
+    return await user.getIdToken();
+  };
+
+  // --- Fetch all tasks ---
+  const fetchTasks = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      const res = await fetch(`${API_URL}/tasks`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Failed to fetch tasks:", res.status, text);
+        toast.error("Failed to load tasks");
+        return;
+      }
+
+      const data = await res.json();
+      const tasksWithId = data.map((t, idx) => ({
+        id: t.id || t.task_id || idx,
+        ...t,
+      }));
+      setTasks(tasksWithId);
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+      toast.error("Error fetching tasks");
+    }
+  };
+
   useEffect(() => {
-    console.log("Current tasks:", tasks); // 👈 Debug
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    fetchTasks();
+  }, []);
 
-  const handleToggle = (id) =>
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
-
-  const handleAdd = () => {
+  // --- Add a new task ---
+  const handleAdd = async () => {
     if (!newTask.trim()) return;
-    setTasks([
-      ...tasks,
-      {
-        id: Date.now(),
+
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      const taskData = {
         title: newTask,
-        completed: false,
         category: newCategory,
         deadline: newDeadline,
         priority: newPriority,
-      },
-    ]);
-    setNewTask("");
-    setNewDeadline("");
-    setNewPriority("Medium");
-    setNewCategory(categories[0]);
+        completed: false,
+      };
+
+      const res = await fetch(`${API_URL}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(taskData),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Failed to add task:", res.status, text);
+        toast.error("Failed to add task");
+        return;
+      }
+
+      const data = await res.json();
+      const newTaskWithId = { id: data.task_id || data.id, ...taskData };
+      setTasks([...tasks, newTaskWithId]);
+
+      setNewTask("");
+      setNewDeadline("");
+      setNewPriority("Medium");
+      setNewCategory(categories[0]);
+      toast.success("Task added successfully");
+    } catch (err) {
+      console.error("Error adding task:", err);
+      toast.error("Error adding task");
+    }
   };
 
-  const handleDelete = (id) => setTasks(tasks.filter((t) => t.id !== id));
+ // --- Toggle task completion ---
+const handleToggle = async (task) => {
+  const updatedTask = { ...task, completed: !task.completed };
+  setTasks(tasks.map((t) => (t.id === task.id ? updatedTask : t))); // optimistic UI
 
+  try {
+    const token = await getToken();
+    if (!token) return;
+
+    const res = await fetch(`${API_URL}/tasks/${task.id}`, {
+      method: "PATCH", // Changed from PUT to PATCH
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updatedTask),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Failed to update task:", res.status, text);
+      toast.error("Failed to update task");
+      fetchTasks(); // fallback: reload tasks from server
+    }
+  } catch (err) {
+    console.error("Error updating task:", err);
+    toast.error("Error updating task");
+    fetchTasks();
+  }
+};
+
+
+  // --- Delete a task ---
+  const handleDelete = async (taskId) => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      const res = await fetch(`${API_URL}/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Failed to delete task:", res.status, text);
+        toast.error("Failed to delete task");
+        return;
+      }
+
+      setTasks(tasks.filter((t) => t.id !== taskId));
+      toast.success("Task deleted");
+    } catch (err) {
+      console.error("Error deleting task:", err);
+      toast.error("Error deleting task");
+    }
+  };
+
+  // --- Filter tasks ---
   const filteredTasks = tasks.filter((task) => {
     if (filter === "Completed") return task.completed;
     if (filter === "Ongoing") return !task.completed;
@@ -83,7 +192,6 @@ export default function ChecklistPage() {
   return (
     <div className="flex min-h-screen bg-blue-50 text-slate-900">
       <Sidebar className="flex-shrink-0 w-64 bg-blue-900 text-white" />
-
       <div className="flex-1 p-6 overflow-x-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -93,7 +201,7 @@ export default function ChecklistPage() {
           </span>
         </div>
 
-        {/* Progress */}
+        {/* Progress Bar */}
         <div className="w-full bg-blue-200 rounded-full h-4 mb-6">
           <div
             className="bg-blue-600 h-4 rounded-full transition-all duration-500"
@@ -128,7 +236,7 @@ export default function ChecklistPage() {
           ))}
         </div>
 
-        {/* Tasks */}
+        {/* Task List */}
         {categories.map((cat) => (
           <div key={cat} className="mb-8">
             <h2 className="text-xl font-semibold mb-4 text-[#01497C]">{cat}</h2>
@@ -138,13 +246,14 @@ export default function ChecklistPage() {
                   (t) =>
                     t.category?.trim().toLowerCase() === cat.trim().toLowerCase()
                 )
-                .map((task) => {
+                .map((task, idx) => {
                   const isNearDeadline =
                     task.deadline &&
-                    (new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24) <= 3;
+                    (new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24) <=
+                      3;
                   return (
                     <div
-                      key={task.id}
+                      key={task.id || task.title + idx}
                       className={`flex flex-wrap items-center justify-between p-4 rounded-xl shadow border border-blue-300 hover:shadow-lg ${
                         task.completed ? "bg-blue-100" : "bg-white"
                       }`}
@@ -153,7 +262,7 @@ export default function ChecklistPage() {
                         <input
                           type="checkbox"
                           checked={task.completed}
-                          onChange={() => handleToggle(task.id)}
+                          onChange={() => handleToggle(task)}
                           className="h-5 w-5 accent-blue-600"
                         />
                         <span
@@ -238,7 +347,9 @@ export default function ChecklistPage() {
               className="border rounded-lg px-3 py-2 border-blue-300 focus:ring-2 focus:ring-blue-600 focus:outline-none"
             >
               {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
             <button
@@ -249,6 +360,8 @@ export default function ChecklistPage() {
             </button>
           </div>
         </div>
+
+        <ToastContainer position="top-right" autoClose={2000} hideProgressBar />
       </div>
     </div>
   );

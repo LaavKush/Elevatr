@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import companyData from "../utils/data";
 import ResourceCard from "../components/ResourceCard";
 import Sidebar from "./Sidebar";
+import ChatBubble from "../components/chatbubble"; // ✅ Import ChatBubble
 
 class Resources extends Component {
   state = {
@@ -12,7 +13,11 @@ class Resources extends Component {
   };
 
   handleChange = (e) => {
-    this.setState({ search: e.target.value, dropdownOpen: true, selectedCompany: "" });
+    this.setState({
+      search: e.target.value,
+      dropdownOpen: true,
+      selectedCompany: "",
+    });
   };
 
   handleFocus = () => {
@@ -20,11 +25,15 @@ class Resources extends Component {
   };
 
   handleSelect = (company) => {
-    this.setState({ selectedCompany: company, search: company, dropdownOpen: false });
+    this.setState({
+      selectedCompany: company,
+      search: company,
+      dropdownOpen: false,
+    });
   };
 
   handleClickOutside = (e) => {
-    if (!this.containerRef.contains(e.target)) {
+    if (this.containerRef && !this.containerRef.contains(e.target)) {
       this.setState({ dropdownOpen: false });
     }
   };
@@ -45,12 +54,14 @@ class Resources extends Component {
     );
 
     const companiesToShow =
-      selectedCompany === "" ? filteredData : filteredData.filter((c) => c.company === selectedCompany);
+      selectedCompany === ""
+        ? filteredData
+        : filteredData.filter((c) => c.company === selectedCompany);
 
     return (
       <div className="flex" ref={(node) => (this.containerRef = node)}>
         <Sidebar />
-        <div className="flex-1 p-6 bg-gray-100 min-h-screen">
+        <div className="flex-1 p-6 bg-gray-100 min-h-screen relative">
           <h1 className="text-3xl font-bold mb-6">Tech Career Guides</h1>
 
           {/* Merged Input + Dropdown */}
@@ -83,6 +94,12 @@ class Resources extends Component {
           {companiesToShow.map((company, idx) => (
             <ResourceCard key={idx} companyData={company} />
           ))}
+
+          {/* ✅ Floating ChatBubble at bottom-right */}
+          <div className="fixed bottom-6 right-6 flex flex-col items-center">
+            <ChatBubble />
+            {/* <p className="text-sm text-gray-600 mt-1">Ask your doubts</p> */}
+          </div>
         </div>
       </div>
     );
