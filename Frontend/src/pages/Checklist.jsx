@@ -6,8 +6,9 @@ import { format } from "date-fns";
 import { auth } from "../firebase";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AISuggestions from "../components/AISuggestions";
 
-const API_URL = "https://67eb25c046d0.ngrok-free.app";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ChecklistPage() {
   const categories = ["Ongoing Courses", "Portfolio Projects", "Certifications"];
@@ -19,11 +20,14 @@ export default function ChecklistPage() {
   const [newPriority, setNewPriority] = useState("Medium");
   const [newCategory, setNewCategory] = useState(categories[0]);
 
-  const [aiSuggestions] = useState([
-    "Start coding small DSA problems daily",
-    "Update your resume this week",
-    "Prepare for at least 1 hackathon",
-  ]);
+  const [userContext, setUserContext] = useState("Student interested in Web Development and DSA");
+
+
+  // const [aiSuggestions] = useState([
+  //   "Start coding small DSA problems daily",
+  //   "Update your resume this week",
+  //   "Prepare for at least 1 hackathon",
+  // ]);
 
   // --- Helper: Get Firebase token ---
   const getToken = async () => {
@@ -210,14 +214,17 @@ const handleToggle = async (task) => {
         </div>
 
         {/* AI Suggestions */}
-        <div className="mb-6 p-6 bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl shadow text-white">
+        {/* <div className="mb-6 p-6 bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl shadow text-white">
           <h2 className="font-semibold mb-3 text-lg">AI Mentor Suggestions 💡</h2>
           <ul className="list-disc list-inside space-y-1">
             {aiSuggestions.map((s, i) => (
               <li key={i}>{s}</li>
             ))}
           </ul>
-        </div>
+        </div> */}
+
+        <AISuggestions context={userContext} />
+
 
         {/* Filters */}
         <div className="flex gap-3 mb-6 flex-wrap">

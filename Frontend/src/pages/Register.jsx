@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const API_URL = "https://67eb25c046d0.ngrok-free.app";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ChecklistPage() {
   const categories = ["Ongoing Courses", "Portfolio Projects", "Certifications"];

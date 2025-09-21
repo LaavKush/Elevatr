@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { auth } from "../firebase";
 import Sidebar from "./Sidebar";
 
-const API_URL = "https://67eb25c046d0.ngrok-free.app/";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default class Profile extends Component {
   constructor(props) {

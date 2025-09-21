@@ -10,7 +10,7 @@ import { auth } from "../firebase.js";
 
 Modal.setAppElement("#root");
 
-const API_URL = "https://67eb25c046d0.ngrok-free.app";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Dashboard = () => {
   const navigate = useNavigate();
