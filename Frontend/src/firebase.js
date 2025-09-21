@@ -1,4 +1,3 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -17,34 +16,32 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Firebase services
+// Initialize Firebase services
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 
-// Helper to get Firebase ID token
-export const getFirebaseToken = async () => {
-  const user = auth.currentUser;
-  if (!user) {
-    console.log("⚠️ No user is signed in.");
-    return null;
-  }
-  try {
-    const token = await user.getIdToken();
-    return token;
-  } catch (err) {
-    console.error("Error getting Firebase token:", err);
-    return null;
-  }
+/**
+ * Helper function to get photo URL or generate a default
+ * For Email/Password users, will show initials as a placeholder image
+ */
+export const getUserPhotoOrInitials = (user) => {
+  if (user.photoURL) return user.photoURL;
+
+  const nameInitial = user.displayName ? user.displayName[0].toUpperCase() : "U";
+  return `https://via.placeholder.com/150/01497C/ffffff?text=${nameInitial}`;
 };
 
 // Listener for auth state changes
 onAuthStateChanged(auth, (user) => {
   if (user) {
     console.log("✅ User is signed in.");
+    console.log("User photo URL:", getUserPhotoOrInitials(user));
+
     user.getIdToken().then((token) => {
       console.log("✅ Firebase ID Token:", token);
     });
+
   } else {
     console.log("⚠️ User is signed out.");
   }

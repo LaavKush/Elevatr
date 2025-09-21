@@ -1,322 +1,247 @@
-// src/pages/ChecklistPage.jsx
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import Sidebar from "./Sidebar";
-import { format } from "date-fns";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import Select from "react-select";
+import { toast, ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+import { auth, getUserPhotoOrInitials } from "../firebase.js";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL;
 
-export default function ChecklistPage() {
-  const categories = ["Ongoing Courses", "Portfolio Projects", "Certifications"];
+const Register = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    college: "",
+    cgpa: "",
+        skills: [],
+    interests: [],
+  });
 
-  const [tasks, setTasks] = useState([]);
-  const [filter, setFilter] = useState("All");
-  const [newTask, setNewTask] = useState("");
-  const [newDeadline, setNewDeadline] = useState("");
-  const [newPriority, setNewPriority] = useState("Medium");
-  const [newCategory, setNewCategory] = useState(categories[0]);
-  const token = localStorage.getItem("token"); // your Bearer token
+  const [userEmail, setUserEmail] = useState(""); 
+  const [userPhoto, setUserPhoto] = useState(""); 
+  const [errors, setErrors] = useState({});
+  const [progress, setProgress] = useState(0);
+  const [stepCompleted, setStepCompleted] = useState({
+    basicInfo: false,
+    skills: false,
+    interests: false,
+    submit: false
+  });
 
-  const [aiSuggestions] = useState([
-    "Start coding small DSA problems daily",
-    "Update your resume this week",
-    "Prepare for at least 1 hackathon",
-  ]);
+  const steps = [
+    { key: "basicInfo", label: "Basic Info Completed" },
+    { key: "skills", label: "Skills Selected" },
+    { key: "interests", label: "Interests Selected" },
+    { key: "submit", label: "Ready to Submit" },
+  ];
 
-  // Fetch tasks from backend
-  const fetchTasks = async () => {
-    try {
-      const res = await fetch(`${API_URL}/tasks`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  const skillsOptions = [
+    { value: "React", label: "React" }, { value: "Python", label: "Python" }, { value: "Machine Learning", label: "Machine Learning" },
+    { value: "Web Development", label: "Web Development" }, { value: "Node.js", label: "Node.js" }, { value: "Django", label: "Django" },
+    { value: "AWS", label: "AWS" }, { value: "JavaScript", label: "JavaScript" }, { value: "TypeScript", label: "TypeScript" },
+    { value: "SQL", label: "SQL" }, { value: "NoSQL", label: "NoSQL" }, { value: "Java", label: "Java" }, { value: "C++", label: "C++" },
+    { value: "Android", label: "Android Development" }, { value: "iOS", label: "iOS Development" }, { value: "Flutter", label: "Flutter" },
+    { value: "Docker", label: "Docker" }, { value: "Kubernetes", label: "Kubernetes" }, { value: "GraphQL", label: "GraphQL" },
+    { value: "Blockchain", label: "Blockchain" }, { value: "Cybersecurity", label: "Cybersecurity" }, { value: "DevOps", label: "DevOps" }
+  ];
 
-      const text = await res.text(); // try text first
-      try {
-        const data = JSON.parse(text);
-        setTasks(data);
-      } catch {
-        console.error("Not JSON response:", text);
-        toast.error("Failed to load tasks ❌ (Invalid response)");
-      }
-    } catch (err) {
-      console.error("Error fetching tasks:", err);
-      toast.error("Failed to load tasks ❌");
-    }
-  };
+  const interestsOptions = [
+    { value: "AI", label: "Artificial Intelligence" }, { value: "Blockchain", label: "Blockchain" },
+    { value: "Frontend", label: "Frontend Development" }, { value: "Cybersecurity", label: "Cybersecurity" },
+    { value: "Data Science", label: "Data Science" }, { value: "Machine Learning", label: "Machine Learning" },
+    { value: "Cloud Computing", label: "Cloud Computing" }, { value: "Mobile Development", label: "Mobile App Development" },
+    { value: "Game Development", label: "Game Development" }, { value: "UX/UI Design", label: "UX/UI Design" },
+    { value: "Product Management", label: "Product Management" }, { value: "Research", label: "Research & Development" },
+    { value: "Entrepreneurship", label: "Entrepreneurship" }, { value: "Startups", label: "Startups" }, { value: "Tech Blogging", label: "Tech Blogging" },
+    { value: "Robotics", label: "Robotics" }, { value: "IoT", label: "Internet of Things" }, { value: "Sustainability", label: "Sustainability" }
+  ];
 
+  const cgpaOptions = [
+    { value: "10", label: "Out of 10" }, { value: "5", label: "Out of 5" }, { value: "4", label: "Out of 4" },
+    { value: "7", label: "Out of 7" }, { value: "100", label: "Percentage (Out of 100)" }
+  ];
+
+  // Get logged-in user email & photo
   useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  // Toggle completed status
-  const handleToggle = async (task) => {
-    try {
-      const updatedTask = { ...task, completed: !task.completed };
-
-      const res = await fetch(`${API_URL}/tasks/${task.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updatedTask),
-      });
-
-      if (!res.ok) throw new Error("Failed to update task");
-
-      setTasks(tasks.map((t) => (t.id === task.id ? updatedTask : t)));
-      toast.success("Task updated ✅");
-    } catch (err) {
-      console.error("Error updating task:", err);
-      toast.error("Failed to update task ❌");
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setUserEmail(user.email);
+      setUserPhoto(user.photoURL);   // <-- direct Google photoURL use karo
+      setFormData(prev => ({ ...prev, name: user.displayName || "" }));
     }
+  });
+  return () => unsubscribe();
+}, []);
+
+
+  // Run validation and progress update whenever formData changes
+  useEffect(() => {
+    const newErrors = {};
+    if (!formData.name) newErrors.name = "Name is required";
+    if (!formData.college) newErrors.college = "College is required";
+    if (!formData.cgpa) newErrors.cgpa = "CGPA is required";
+    if (!formData.cgpaScale) newErrors.cgpaScale = "CGPA scale is required";
+    if (formData.skills.length === 0) newErrors.skills = "Select at least one skill";
+    if (formData.interests.length === 0) newErrors.interests = "Select at least one interest";
+    setErrors(newErrors);
+
+    const basicInfoDone = formData.name && formData.college && formData.cgpa && formData.cgpaScale;
+    const skillsDone = formData.skills.length > 0;
+    const interestsDone = formData.interests.length > 0;
+    const noErrors = Object.keys(newErrors).length === 0;
+
+    setStepCompleted({
+      basicInfo: basicInfoDone && noErrors,
+      skills: skillsDone && noErrors,
+      interests: interestsDone && noErrors,
+      submit: basicInfoDone && skillsDone && interestsDone && noErrors
+    });
+
+    const completedCount = [
+      basicInfoDone && noErrors,
+      skillsDone && noErrors,
+      interestsDone && noErrors,
+      basicInfoDone && skillsDone && interestsDone && noErrors
+    ].filter(Boolean).length;
+
+    setProgress((completedCount / steps.length) * 100);
+
+  }, [formData]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Add new task
-  const handleAdd = async () => {
-    if (!newTask.trim()) return;
+  const handleSelectChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
+  };
 
-    const taskData = {
-      title: newTask,
-      category: newCategory,
-      deadline: newDeadline,
-      priority: newPriority,
-      completed: false,
-    };
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (Object.keys(errors).length > 0) return;
 
     try {
-      const res = await fetch(`${API_URL}/tasks`, {
+      const token = await auth.currentUser.getIdToken();
+
+      const profileData = {
+        name: formData.name,
+        email: userEmail,
+        photoURL: userPhoto,
+        college: formData.college,
+        cgpa: parseFloat(formData.cgpa),
+        skills: formData.skills.map(item => item.value),
+        interests: formData.interests.map(item => item.value),
+      };
+
+      const rootURL = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${rootURL}/profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify(taskData),
+        body: JSON.stringify(profileData)
       });
+      const result = await response.json();
 
-      if (!res.ok) throw new Error("Failed to add task");
-
-      const data = await res.json();
-      setTasks([...tasks, { id: data.task_id, ...taskData }]);
-      toast.success("Task added to database! ✅");
-
-      setNewTask("");
-      setNewDeadline("");
-      setNewPriority("Medium");
-      setNewCategory(categories[0]);
+      if (result.status === "success") {
+        toast.success("Profile created successfully!");
+        navigate("/dashboard", { state: { profile: profileData } });
+      } else {
+        toast.error(result.message || "Failed to create profile");
+      }
     } catch (err) {
-      console.error("Error adding task:", err);
-      toast.error("Failed to add task ❌");
+      toast.error(err.message || "Registration failed");
     }
   };
+  const navigate = useNavigate();
 
-  // Delete task
-  const handleDelete = async (taskId) => {
-    try {
-      const res = await fetch(`${API_URL}/tasks/${taskId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Failed to delete task");
-
-      setTasks(tasks.filter((t) => t.id !== taskId));
-      toast.success("Task deleted ✅");
-    } catch (err) {
-      console.error("Error deleting task:", err);
-      toast.error("Failed to delete task ❌");
-    }
-  };
-
-  const filteredTasks = tasks.filter((task) => {
-    if (filter === "Completed") return task.completed;
-    if (filter === "Ongoing") return !task.completed;
-    return true;
-  });
-
-  const completionRate = tasks.length
-    ? Math.round((tasks.filter((t) => t.completed).length / tasks.length) * 100)
-    : 0;
 
   return (
-    <div className="flex min-h-screen bg-blue-50 text-slate-900">
-      <Sidebar className="flex-shrink-0 w-64 bg-blue-900 text-white" />
-      <div className="flex-1 p-6 overflow-x-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Checklist ✅</h1>
-          <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-            {completionRate}%
-          </span>
-        </div>
-
-        {/* Progress */}
-        <div className="w-full bg-blue-200 rounded-full h-4 mb-6">
-          <div
-            className="bg-blue-600 h-4 rounded-full transition-all duration-500"
-            style={{ width: `${completionRate}%` }}
-          />
-        </div>
-
-        {/* AI Suggestions */}
-        <div className="mb-6 p-6 bg-gradient-to-r from-blue-500 to-blue-700 rounded-xl shadow text-white">
-          <h2 className="font-semibold mb-3 text-lg">AI Mentor Suggestions 💡</h2>
-          <ul className="list-disc list-inside space-y-1">
-            {aiSuggestions.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-3 mb-6 flex-wrap">
-          {["All", "Ongoing", "Completed"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg transition ${
-                filter === f
-                  ? "bg-blue-600 text-white"
-                  : "bg-blue-400 text-white/80 hover:bg-blue-500"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
-        {/* Tasks */}
-        {categories.map((cat) => (
-          <div key={cat} className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-[#01497C]">{cat}</h2>
-            <div className="grid gap-4">
-              {filteredTasks
-                .filter(
-                  (t) =>
-                    t.category?.trim().toLowerCase() ===
-                    cat.trim().toLowerCase()
-                )
-                .map((task) => {
-                  const isNearDeadline =
-                    task.deadline &&
-                    (new Date(task.deadline) - new Date()) /
-                      (1000 * 60 * 60 * 24) <=
-                      3;
-                  return (
-                    <div
-                      key={task.id}
-                      className={`flex flex-wrap items-center justify-between p-4 rounded-xl shadow border border-blue-300 hover:shadow-lg ${
-                        task.completed ? "bg-blue-100" : "bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-[200px]">
-                        <input
-                          type="checkbox"
-                          checked={task.completed}
-                          onChange={() => handleToggle(task)}
-                          className="h-5 w-5 accent-blue-600"
-                        />
-                        <span
-                          className={`font-medium ${
-                            task.completed
-                              ? "line-through text-gray-500"
-                              : "text-slate-900"
-                          }`}
-                        >
-                          {task.title}
-                        </span>
-                      </div>
-
-                      <div className="text-center min-w-[120px]">
-                        <span
-                          className={`text-sm ${
-                            isNearDeadline
-                              ? "text-red-600 font-semibold"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {task.deadline
-                            ? format(new Date(task.deadline), "yyyy-MM-dd")
-                            : "N/A"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-3 min-w-[120px] justify-end">
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            task.priority === "High"
-                              ? "bg-red-100 text-red-600"
-                              : task.priority === "Medium"
-                              ? "bg-blue-400 text-white"
-                              : "bg-green-200 text-green-800"
-                          }`}
-                        >
-                          {task.priority}
-                        </span>
-                        <button
-                          onClick={() => handleDelete(task.id)}
-                          className="p-1 hover:bg-blue-200 rounded-full"
-                        >
-                          <Trash2 className="w-5 h-5 text-slate-800" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+    <div className="min-h-screen bg-gradient-to-r from-[#01497C] to-[#468FAF] py-12 px-6">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-10">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center space-x-4">
+            {userPhoto ? (
+              <img src={userPhoto} alt="Profile" className="w-20 h-20 rounded-full object-cover" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-[#01497C] flex items-center justify-center text-white text-3xl font-semibold">
+                {formData.name ? formData.name[0].toUpperCase() : "U"}
+              </div>
+            )}
+            <div>
+              <h2 className="text-3xl font-semibold text-[#01497C]">Register</h2>
             </div>
           </div>
-        ))}
+        </div>
 
-        {/* Add Task */}
-        <div className="flex flex-col gap-3 mt-8">
-          <input
-            type="text"
-            placeholder="Task title..."
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            className="border rounded-lg px-3 py-2 border-blue-300 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-          />
-          <div className="flex gap-3 flex-wrap">
-            <input
-              type="date"
-              value={newDeadline}
-              onChange={(e) => setNewDeadline(e.target.value)}
-              className="border rounded-lg px-3 py-2 border-blue-300 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-            />
-            <select
-              value={newPriority}
-              onChange={(e) => setNewPriority(e.target.value)}
-              className="border rounded-lg px-3 py-2 border-blue-300 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-            >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-            </select>
-            <select
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              className="border rounded-lg px-3 py-2 border-blue-300 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleAdd}
-              className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              <Plus className="w-5 h-5" /> Add
-            </button>
+        {/* Stepper */}
+        <div className="relative mb-6">
+          <div className="w-full h-2 bg-gray-300 rounded-full">
+            <div className="h-2 bg-gradient-to-r from-[#00B4D8] to-[#01497C] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="absolute top-0 left-0 w-full flex justify-between items-center -mt-5">
+            {steps.map((step, idx) => (
+              <div key={step.key} className="flex flex-col items-center">
+               <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white ${stepCompleted[step.key] ? 'bg-[#01497C]' : 'bg-gray-300'} transition duration-300 mb-2`}>
+                  {idx+1}
+               </span>
+               <span className="text-xs mt-1 font-semibold">{step.label}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+<br></br>
+        <form onSubmit={onSubmit} className="space-y-8">
+          <div>
+            <label className="block text-lg font-semibold text-[#01497C]">Email</label>
+            <input type="email" value={userEmail} disabled className="w-full p-4 border border-[#2C7DA0] bg-gray-100 rounded-lg shadow-md" />
+          </div>
 
-      {/* Toast Container */}
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+          <div>
+            <label className="block text-lg font-semibold text-[#01497C]">Name</label>
+            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Enter your full name" className="w-full p-4 border border-[#2C7DA0] rounded-lg shadow-md focus:ring-2 focus:ring-[#01497C] transition duration-200" />
+            {errors.name && <p className="text-red-500 text-xs mt-2">{errors.name}</p>}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold text-[#01497C]">College</label>
+            <input type="text" name="college" value={formData.college} onChange={handleChange} placeholder="Enter your college" className="w-full p-4 border border-[#2C7DA0] rounded-lg shadow-md focus:ring-2 focus:ring-[#01497C] transition duration-200" />
+            {errors.college && <p className="text-red-500 text-xs mt-2">{errors.college}</p>}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold text-[#01497C]">CGPA</label>
+            <input type="text" name="cgpa" value={formData.cgpa} onChange={(e) => handleSelectChange("cgpa", e.target.value)} placeholder="Enter CGPA" className="w-full p-4 border border-[#2C7DA0] rounded-lg shadow-md focus:ring-2 focus:ring-[#01497C] transition duration-200" />
+            {errors.cgpa && <p className="text-red-500 text-xs mt-2">{errors.cgpa}</p>}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold text-[#01497C]">CGPA Scale</label>
+            <Select options={cgpaOptions} value={formData.cgpaScale} onChange={(val) => handleSelectChange("cgpaScale", val)} placeholder="Select scale" />
+            {errors.cgpaScale && <p className="text-red-500 text-xs mt-2">{errors.cgpaScale}</p>}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold text-[#01497C]">Skills</label>
+            <Select options={skillsOptions} value={formData.skills} isMulti onChange={(val) => handleSelectChange("skills", val)} placeholder="Select your skills" />
+            {errors.skills && <p className="text-red-500 text-xs mt-2">{errors.skills}</p>}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold text-[#01497C]">Interests</label>
+            <Select options={interestsOptions} value={formData.interests} isMulti onChange={(val) => handleSelectChange("interests", val)} placeholder="Select your interests" />
+            {errors.interests && <p className="text-red-500 text-xs mt-2">{errors.interests}</p>}
+          </div>
+
+          <div className="flex justify-end mt-6">
+            <button type="submit" className="bg-[#014F86] text-white py-3 px-8 rounded-full hover:bg-[#01497C] transition duration-300">Register</button>
+          </div>
+        </form>
+
+        <ToastContainer />
+      </div>
     </div>
   );
-}
+};
+
+export default Register;

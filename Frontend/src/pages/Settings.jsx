@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { auth } from "../firebase";
 import Sidebar from "./Sidebar";
 
-const API_URL = "https://a0862bb7f80b.ngrok-free.app/profile";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Settings = () => {
   const navigate = useNavigate();
