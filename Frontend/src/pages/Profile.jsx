@@ -56,7 +56,7 @@ export default class Profile extends Component {
 
       const token = await user.getIdToken();
 
-      const res = await fetch(`${API_URL}profile`, {
+      const res = await fetch(`${API_URL}/profile`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -105,7 +105,7 @@ export default class Profile extends Component {
         resume_summary: this.state.userProfile.resume_summary || "",
       };
 
-      const res = await fetch(`${API_URL}profile`, {
+      const res = await fetch(`${API_URL}/profile`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
