@@ -22,7 +22,7 @@ The platform addresses the lack of centralized, personalized career guidance by 
 </video>
 
 
----
+
 
 ## 🎯 Key Features
 - 🔍 **Skill Gap Analysis** – Identifies missing skills based on user profile and goals  
