@@ -15,6 +15,15 @@ The platform addresses the lack of centralized, personalized career guidance by 
 
 ---
 
+## 🎥 Demo Video
+
+<video width="800" controls>
+  <source src="Elevatr%20Demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+---
+
 ## 🎯 Key Features
 - 🔍 **Skill Gap Analysis** – Identifies missing skills based on user profile and goals  
 - 🤖 **AI-Powered Career Guidance** – Personalized career recommendations  
