@@ -13,7 +13,7 @@
 
 The platform addresses the lack of centralized, personalized career guidance by offering an adaptive ecosystem tailored to individual skill sets and career goals.
 
----
+
 
 ## 🎥 Demo Video
 
