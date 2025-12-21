@@ -13,16 +13,16 @@
 
 The platform addresses the lack of centralized, personalized career guidance by offering an adaptive ecosystem tailored to individual skill sets and career goals.
 
-
+---
 
 ## 🎥 Demo Video
 
 <video width="800" controls>
-  <source src="./Elevatr-Demo.mp4" type="video/mp4">
+  <source src="https://raw.githubusercontent.com/LaavKush/Elevatr/main/Elevatr-Demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
 </video>
 
-
-
+---
 
 ## 🎯 Key Features
 - 🔍 **Skill Gap Analysis** – Identifies missing skills based on user profile and goals  
@@ -51,29 +51,3 @@ The platform addresses the lack of centralized, personalized career guidance by 
 ### Database & Authentication
 - Firebase Authentication 2.0
 - Firestore
-
----
-
-## 🏗️ System Architecture
-- **Frontend**: Handles user interaction and dashboards  
-- **Backend APIs**: Manage business logic and data flow  
-- **AI Services**: Python-based analysis and recommendations  
-- **Database/Auth**: Firebase for authentication and real-time data storage  
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v18+ recommended)
-- Python 3.9+
-- Firebase account
-
----
-
-## ⚙️ Installation & Setup
-
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/your-username/elevatr.git
-cd elevatr
