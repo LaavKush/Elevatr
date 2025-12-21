@@ -17,7 +17,7 @@ The platform addresses the lack of centralized, personalized career guidance by 
 
 ## 🎥 Demo Video
 
-[![Elevatr Demo](https://raw.githubusercontent.com/LaavKush/Elevatr/main/demo-thumbnail.png)](https://github.com/LaavKush/Elevatr/releases/download/v1.0/Elevatr-Demo.mp4)
+[Watch Demo Video](https://github.com/LaavKush/Elevatr/releases/download/v1.0/Elevatr-Demo.mp4)
 
 ---
 
